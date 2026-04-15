@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Obesity Risk Predictor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #f1f5f9;
+      --surface:    #ffffff;
+      --surface2:   #f8fafc;
+      --border:     #e2e8f0;
+      --primary:    #4f46e5;
+      --primary-lt: #eef2ff;
+      --text:       #1e293b;
+      --text-muted: #64748b;
+      --radius:     14px;
+      --shadow:     0 1px 12px rgba(15,23,42,.07);
+      --shadow-md:  0 4px 20px rgba(15,23,42,.11);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════════
+       HEADER
+    ══════════════════════════════════ */
+    header {
+      background: linear-gradient(120deg, #4338ca 0%, #6d28d9 100%);
+      padding: 28px 32px;
+      display: flex; align-items: center; gap: 20px;
+    }
+    .header-logo {
+      width: 48px; height: 48px; border-radius: 14px;
+      background: rgba(255,255,255,.15);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .header-logo .material-icons-round { color: #fff; font-size: 1.6rem; }
+    .header-text h1 { font-size: 1.3rem; font-weight: 800; color: #fff; letter-spacing: -.01em; }
+    .header-text p  { font-size: .8rem; color: #c7d2fe; margin-top: 2px; }
+    .header-chip {
+      margin-left: auto;
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(52,211,153,.2); border: 1px solid rgba(52,211,153,.4);
+      color: #6ee7b7; border-radius: 999px; padding: 5px 14px;
+      font-size: .78rem; font-weight: 700; white-space: nowrap;
+    }
+
+    /* ══════════════════════════════════
+       TWO-COLUMN LAYOUT
+    ══════════════════════════════════ */
+    .page-body {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      max-width: 1180px;
+      margin: 28px auto;
+      padding: 0 24px 60px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .page-body { grid-template-columns: 1fr; }
+      .right-col { position: static !important; }
+    }
+
+    /* ── Left column: form ── */
+    .left-col { display: flex; flex-direction: column; gap: 18px; }
+
+    /* ── Right column: sticky result ── */
+    .right-col {
+      position: sticky;
+      top: 24px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    /* ══════════════════════════════════
+       CARDS (shared)
+    ══════════════════════════════════ */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+    .card-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 18px; padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-icon {
+      width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card-icon .material-icons-round { font-size: 1.15rem; }
+    .card-icon.purple { background: #ede9fe; color: #7c3aed; }
+    .card-icon.amber  { background: #fef3c7; color: #d97706; }
+    .card-icon.green  { background: #dcfce7; color: #16a34a; }
+    .card-icon.blue   { background: #dbeafe; color: #2563eb; }
+    .card-title-text strong { font-size: .9rem; font-weight: 700; display: block; }
+    .card-title-text span   { font-size: .72rem; color: var(--text-muted); }
+
+    /* ══════════════════════════════════
+       FORM FIELDS
+    ══════════════════════════════════ */
+    .field-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label {
+      font-size: .72rem; font-weight: 600; color: var(--text-muted);
+      display: flex; align-items: center; gap: 4px; letter-spacing: .02em;
+    }
+    .field label .material-icons-round { font-size: .88rem; }
+
+    .field input, .field select {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      border-radius: 9px; padding: 9px 11px;
+      font-size: .87rem; font-family: inherit;
+      transition: border-color .18s, box-shadow .18s, background .18s;
+      outline: none; appearance: none; -webkit-appearance: none;
+    }
+    .field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--primary); background: #fff;
+      box-shadow: 0 0 0 3px rgba(79,70,229,.1);
+    }
+    .field input::placeholder { color: #b0bec5; }
+
+    /* Sliders */
+    .slider-wrap { display: flex; flex-direction: column; gap: 5px; }
+    .slider-row  { display: flex; align-items: center; gap: 8px; }
+    .slider-row input[type=range] {
+      flex: 1; accent-color: var(--primary);
+      border: none; padding: 0; background: transparent; box-shadow: none;
+    }
+    .slider-val {
+      min-width: 26px; text-align: center;
+      font-size: .8rem; font-weight: 700; color: var(--primary);
+      background: var(--primary-lt); border-radius: 5px; padding: 1px 5px;
+    }
+    .slider-hint { font-size: .67rem; color: var(--text-muted); }
+
+    /* BMI live card inside grid */
+    .bmi-inline {
+      grid-column: 1 / -1;
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      border: 1px solid #bfdbfe; border-radius: 10px;
+      padding: 12px 16px; display: none;
+      align-items: center; gap: 12px;
+    }
+    .bmi-inline.show { display: flex; }
+    .bmi-circle {
+      width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+      background: #2563eb; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .bmi-circle span:first-child { font-size: .62rem; font-weight: 700; color: #bfdbfe; }
+    .bmi-circle span:last-child  { font-size: 1rem; font-weight: 800; color: #fff; }
+    .bmi-info strong { font-size: .88rem; font-weight: 700; color: #1d4ed8; display: block; }
+    .bmi-info small  { font-size: .75rem; color: #3b82f6; }
+
+    /* ══════════════════════════════════
+       SUBMIT BUTTON
+    ══════════════════════════════════ */
+    .btn-predict {
+      width: 100%;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff; border: none; border-radius: 10px;
+      padding: 14px; font-size: .95rem; font-weight: 700;
+      cursor: pointer; letter-spacing: .03em;
+      transition: opacity .2s, transform .12s, box-shadow .2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 4px 14px rgba(79,70,229,.35);
+    }
+    .btn-predict:hover  { opacity: .92; transform: translateY(-1px); box-shadow: 0 7px 20px rgba(79,70,229,.4); }
+    .btn-predict:active { transform: none; }
+    .btn-predict.loading { opacity: .7; pointer-events: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.35);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .65s linear infinite;
+    }
+
+    /* ══════════════════════════════════
+       RIGHT PANEL — IDLE STATE
+    ══════════════════════════════════ */
+    .idle-panel {
+      background: var(--surface);
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 40px 24px;
+      text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+    }
+    .idle-panel svg { opacity: .55; }
+    .idle-panel p { font-size: .85rem; color: var(--text-muted); line-height: 1.6; max-width: 240px; }
+
+    /* ══════════════════════════════════
+       RIGHT PANEL — RESULT
+    ══════════════════════════════════ */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .result-visible { animation: fadeIn .35s ease; }
+
+    /* Result hero card */
+    .result-hero-card {
+      border-radius: var(--radius); padding: 22px;
+      border: 1.5px solid; box-shadow: var(--shadow-md);
+    }
+    .result-top { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+    .result-emoji { font-size: 2.6rem; line-height: 1; }
+    .result-label { font-size: 1.25rem; font-weight: 800; }
+    .result-conf  { font-size: .78rem; color: var(--text-muted); font-weight: 500; }
+
+    /* Gauge ring */
+    .gauge-row {
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid var(--border); padding-top: 14px; gap: 16px;
+    }
+    .gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .gauge-label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+
+    /* Class badge strip */
+    .class-strip { display: flex; flex-wrap: wrap; gap: 6px; }
+    .class-badge {
+      padding: 3px 10px; border-radius: 999px; font-size: .7rem; font-weight: 700;
+      border: 1px solid;
+    }
+
+    /* Advice */
+    .advice-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 18px;
+      font-size: .85rem; line-height: 1.65; color: var(--text-muted);
+      display: flex; gap: 10px; align-items: flex-start;
+      box-shadow: var(--shadow);
+    }
+    .advice-card .material-icons-round { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+
+    /* Prob bars */
+    .prob-card .card-header { margin-bottom: 12px; padding-bottom: 12px; }
+    .prob-list { display: flex; flex-direction: column; gap: 9px; }
+    .prob-row  { display: flex; align-items: center; gap: 8px; }
+    .prob-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .prob-name { font-size: .72rem; color: var(--text-muted); width: 135px; flex-shrink: 0; }
+    .prob-bar-wrap { flex: 1; background: #f1f5f9; border-radius: 999px; height: 7px; overflow: hidden; }
+    .prob-bar { height: 100%; border-radius: 999px; transition: width .65s cubic-bezier(.4,0,.2,1); }
+    .prob-pct { font-size: .7rem; font-weight: 700; width: 34px; flex-shrink: 0; color: var(--text-muted); text-align: right; }
+
+    /* Error */
+    .error-box {
+      background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px;
+      padding: 14px 16px; color: #be123c; font-size: .87rem;
+      display: flex; gap: 8px; align-items: center;
+    }
+
+    /* ══════════════════════════════════
+       FOOTER
+    ══════════════════════════════════ */
+    footer {
+      text-align: center; color: var(--text-muted); font-size: .72rem;
+      padding: 0 24px 40px; display: flex; flex-direction: column;
+      align-items: center; gap: 8px;
+    }
+    .footer-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .footer-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 999px; padding: 3px 10px; font-size: .68rem; font-weight: 600;
+    }
+    .footer-tag .material-icons-round { font-size: .8rem; }
+
+    @media (max-width: 600px) {
+      .field-grid { grid-template-columns: 1fr; }
+      header { flex-wrap: wrap; }
+      .header-chip { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     HEADER
+══════════════════════════════════ -->
+<header>
+  <div class="header-logo">
+    <span class="material-icons-round">monitor_heart</span>
+  </div>
+  <div class="header-text">
+    <h1>Obesity Risk Predictor</h1>
+    <p>ML-powered · UCI Obesity Dataset · Logistic Regression</p>
+  </div>
+  <div class="header-chip">
+    <span class="material-icons-round" style="font-size:.85rem">verified</span>
+    {{ accuracy }}% accuracy
+  </div>
+</header>
+
+<!-- ══════════════════════════════════
+     TWO-COLUMN BODY
+══════════════════════════════════ -->
+<div class="page-body">
+
+  <!-- ════════ LEFT: FORM ════════ -->
+  <div class="left-col">
+    <form id="predForm">
+
+      <!-- ── Section 1: Physical ── -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon purple">
+            <span class="material-icons-round">accessibility_new</span>
+          </div>
+          <div class="card-title-text">
+            <strong>Physical Attributes</strong>
+            <span>Body measurements &amp; family background</span>
+          </div>
+        </div>
+        <div class="field-grid">
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#7c3aed">wc</span>Gender</label>
+            <select name="gender" required>
+              <option value="">Select…</option>
+              <option>Male</option><option>Female</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#7c3aed">cake</span>Age (years)</label>
+            <input type="number" name="age" min="10" max="100" placeholder="e.g. 28" required />
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#7c3aed">height</span>Height (m)</label>
+            <input type="number" name="height" id="heightInput" min="1.2" max="2.2" step="0.01" placeholder="e.g. 1.72" required />
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#7c3aed">monitor_weight</span>Weight (kg)</label>
+            <input type="number" name="weight" id="weightInput" min="30" max="250" step="0.1" placeholder="e.g. 75" required />
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#7c3aed">family_restroom</span>Family overweight history?</label>
+            <select name="family_history" required>
+              <option value="">Select…</option>
+              <option value="yes">Yes</option><option value="no">No</option>
+            </select>
+          </div>
+
+          <!-- Live BMI -->
+          <div class="bmi-inline" id="bmiInline">
+            <div class="bmi-circle">
+              <span>BMI</span>
+              <span id="bmiVal">–</span>
+            </div>
+            <div class="bmi-info">
+              <strong id="bmiCat">–</strong>
+              <small>Based on height &amp; weight</small>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Section 2: Diet ── -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon amber">
+            <span class="material-icons-round">restaurant</span>
+          </div>
+          <div class="card-title-text">
+            <strong>Diet &amp; Eating Habits</strong>
+            <span>Food frequency, meals and hydration</span>
+          </div>
+        </div>
+        <div class="field-grid">
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#d97706">fastfood</span>High-calorie food often? (FAVC)</label>
+            <select name="favc" required>
+              <option value="">Select…</option>
+              <option value="yes">Yes</option><option value="no">No</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#d97706">eco</span>Vegetable intake (FCVC)</label>
+            <div class="slider-wrap">
+              <div class="slider-row">
+                <input type="range" name="fcvc" min="1" max="3" step="1" value="2"
+                       oninput="this.nextElementSibling.textContent=this.value" />
+                <span class="slider-val">2</span>
+              </div>
+              <span class="slider-hint">1 = Never · 3 = Always</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#d97706">dinner_dining</span>Main meals/day (NCP)</label>
+            <div class="slider-wrap">
+              <div class="slider-row">
+                <input type="range" name="ncp" min="1" max="4" step="1" value="3"
+                       oninput="this.nextElementSibling.textContent=this.value" />
+                <span class="slider-val">3</span>
+              </div>
+              <span class="slider-hint">1 meal · 4 meals</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#d97706">cookie</span>Snacking between meals (CAEC)</label>
+            <select name="caec" required>
+              <option value="">Select…</option>
+              <option value="no">No</option>
+              <option value="Sometimes">Sometimes</option>
+              <option value="Frequently">Frequently</option>
+              <option value="Always">Always</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#d97706">water_drop</span>Daily water intake (CH2O)</label>
+            <div class="slider-wrap">
+              <div class="slider-row">
+                <input type="range" name="ch2o" min="1" max="3" step="1" value="2"
+                       oninput="this.nextElementSibling.textContent=this.value" />
+                <span class="slider-val">2</span>
+              </div>
+              <span class="slider-hint">1 = &lt;1 L · 2 = 1–2 L · 3 = &gt;2 L</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#d97706">calculate</span>Track calories? (SCC)</label>
+            <select name="scc" required>
+              <option value="">Select…</option>
+              <option value="yes">Yes</option><option value="no">No</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#d97706">local_bar</span>Alcohol frequency (CALC)</label>
+            <select name="calc" required>
+              <option value="">Select…</option>
+              <option value="no">No</option>
+              <option value="Sometimes">Sometimes</option>
+              <option value="Frequently">Frequently</option>
+              <option value="Always">Always</option>
+            </select>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Section 3: Lifestyle ── -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon green">
+            <span class="material-icons-round">directions_run</span>
+          </div>
+          <div class="card-title-text">
+            <strong>Lifestyle &amp; Activity</strong>
+            <span>Exercise, habits and daily transport</span>
+          </div>
+        </div>
+        <div class="field-grid">
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#16a34a">smoking_rooms</span>Do you smoke?</label>
+            <select name="smoke" required>
+              <option value="">Select…</option>
+              <option value="yes">Yes</option><option value="no">No</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#16a34a">fitness_center</span>Physical activity (FAF)</label>
+            <div class="slider-wrap">
+              <div class="slider-row">
+                <input type="range" name="faf" min="0" max="3" step="1" value="1"
+                       oninput="this.nextElementSibling.textContent=this.value" />
+                <span class="slider-val">1</span>
+              </div>
+              <span class="slider-hint">0 = None · 3 = High</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#16a34a">devices</span>Screen time hrs/day (TUE)</label>
+            <div class="slider-wrap">
+              <div class="slider-row">
+                <input type="range" name="tue" min="0" max="2" step="1" value="1"
+                       oninput="this.nextElementSibling.textContent=this.value" />
+                <span class="slider-val">1</span>
+              </div>
+              <span class="slider-hint">0 = 0–2 h · 1 = 3–5 h · 2 = &gt;5 h</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label><span class="material-icons-round" style="color:#16a34a">commute</span>Transport type (MTRANS)</label>
+            <select name="mtrans" required>
+              <option value="">Select…</option>
+              <option value="Public_Transportation">🚌 Public Transport</option>
+              <option value="Automobile">🚗 Automobile</option>
+              <option value="Walking">🚶 Walking</option>
+              <option value="Motorbike">🛵 Motorbike</option>
+              <option value="Bike">🚲 Bike</option>
+            </select>
+          </div>
+
+        </div>
+      </div>
+
+      <button type="submit" class="btn-predict" id="submitBtn">
+        <span class="material-icons-round">analytics</span>
+        Analyse My Risk
+      </button>
+
+    </form>
+  </div><!-- /left-col -->
+
+  <!-- ════════ RIGHT: RESULTS (sticky) ════════ -->
+  <div class="right-col" id="rightCol">
+
+    <!-- Idle placeholder -->
+    <div class="idle-panel" id="idlePanel">
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Clipboard -->
+        <rect x="14" y="18" width="52" height="56" rx="8" fill="#e0e7ff"/>
+        <rect x="28" y="10" width="24" height="16" rx="6" fill="#c7d2fe"/>
+        <!-- Lines -->
+        <rect x="24" y="36" width="32" height="4" rx="2" fill="#a5b4fc"/>
+        <rect x="24" y="46" width="24" height="4" rx="2" fill="#a5b4fc"/>
+        <rect x="24" y="56" width="18" height="4" rx="2" fill="#a5b4fc"/>
+        <!-- Check circle -->
+        <circle cx="60" cy="60" r="14" fill="#4f46e5"/>
+        <path d="M54 60l4 4 8-8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <p>Fill in the form on the left and click <strong>Analyse My Risk</strong> to see your results here.</p>
+    </div>
+
+    <!-- Result hero (hidden until predict) -->
+    <div class="result-hero-card" id="resultHeroCard" style="display:none">
+      <div class="result-top">
+        <div class="result-emoji" id="resultEmoji"></div>
+        <div>
+          <div class="result-label" id="resultLabel"></div>
+          <div class="result-conf"  id="resultConf"></div>
+        </div>
+      </div>
+      <div class="gauge-row">
+        <div class="gauge-wrap">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="28" fill="none" stroke="#e2e8f0" stroke-width="7"/>
+            <circle cx="36" cy="36" r="28" fill="none" id="gaugeArc"
+                    stroke="#6366f1" stroke-width="7" stroke-linecap="round"
+                    stroke-dasharray="176" stroke-dashoffset="176"
+                    transform="rotate(-90 36 36)"
+                    style="transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)"/>
+            <text x="36" y="41" text-anchor="middle" font-size="12" font-weight="800"
+                  font-family="Inter,sans-serif" fill="#1e293b" id="gaugeText">0%</text>
+          </svg>
+          <span class="gauge-label">Confidence</span>
+        </div>
+        <div class="class-strip" id="classBadges"></div>
+      </div>
+    </div>
+
+    <!-- Advice (hidden until predict) -->
+    <div class="advice-card" id="adviceCard" style="display:none">
+      <span class="material-icons-round" id="adviceIcon">tips_and_updates</span>
+      <span id="adviceText"></span>
+    </div>
+
+    <!-- Probability bars (hidden until predict) -->
+    <div class="card prob-card" id="probCard" style="display:none">
+      <div class="card-header">
+        <div class="card-icon blue">
+          <span class="material-icons-round">bar_chart</span>
+        </div>
+        <div class="card-title-text">
+          <strong>Class Breakdown</strong>
+          <span>Probability across all 7 obesity levels</span>
+        </div>
+      </div>
+      <div class="prob-list" id="probList"></div>
+    </div>
+
+  </div><!-- /right-col -->
+
+</div><!-- /page-body -->
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-row">
+    <span class="footer-tag"><span class="material-icons-round" style="color:#7c3aed">psychology</span>scikit-learn</span>
+    <span class="footer-tag"><span class="material-icons-round" style="color:#e67e22">bolt</span>Flask</span>
+    <span class="footer-tag"><span class="material-icons-round" style="color:#0284c7">dataset</span>UCI Obesity Dataset</span>
+    <span class="footer-tag"><span class="material-icons-round" style="color:#16a34a">account_tree</span>Logistic Regression OvA</span>
+  </div>
+  <p>For educational purposes only — not a substitute for medical advice.</p>
+</footer>
+
+<script>
+  const form           = document.getElementById('predForm');
+  const submitBtn      = document.getElementById('submitBtn');
+  const idlePanel      = document.getElementById('idlePanel');
+  const resultHeroCard = document.getElementById('resultHeroCard');
+  const resultEmoji    = document.getElementById('resultEmoji');
+  const resultLabel    = document.getElementById('resultLabel');
+  const resultConf     = document.getElementById('resultConf');
+  const gaugeArc       = document.getElementById('gaugeArc');
+  const gaugeText      = document.getElementById('gaugeText');
+  const classBadges    = document.getElementById('classBadges');
+  const adviceCard     = document.getElementById('adviceCard');
+  const adviceIcon     = document.getElementById('adviceIcon');
+  const adviceText     = document.getElementById('adviceText');
+  const probCard       = document.getElementById('probCard');
+  const probList       = document.getElementById('probList');
+
+  const EMOJI = {
+    'Insufficient Weight': '⚖️',
+    'Normal Weight':       '✅',
+    'Overweight Level I':  '⚠️',
+    'Overweight Level II': '⚠️',
+    'Obesity Type I':      '🔴',
+    'Obesity Type II':     '🔴',
+    'Obesity Type III':    '🚨',
+  };
+
+  const CLASS_COLORS = {
+    'Insufficient Weight': '#3b82f6',
+    'Normal Weight':       '#22c55e',
+    'Overweight Level I':  '#f59e0b',
+    'Overweight Level II': '#f97316',
+    'Obesity Type I':      '#ef4444',
+    'Obesity Type II':     '#dc2626',
+    'Obesity Type III':    '#991b1b',
+  };
+
+  /* ── Live BMI ── */
+  const heightInput = document.getElementById('heightInput');
+  const weightInput = document.getElementById('weightInput');
+  const bmiInline   = document.getElementById('bmiInline');
+  const bmiVal      = document.getElementById('bmiVal');
+  const bmiCat      = document.getElementById('bmiCat');
+
+  function updateBMI() {
+    const h = parseFloat(heightInput.value);
+    const w = parseFloat(weightInput.value);
+    if (h > 0 && w > 0) {
+      const bmi = (w / (h * h)).toFixed(1);
+      bmiVal.textContent = bmi;
+      if      (bmi < 18.5) bmiCat.textContent = 'Underweight';
+      else if (bmi < 25)   bmiCat.textContent = 'Normal weight';
+      else if (bmi < 30)   bmiCat.textContent = 'Overweight';
+      else                 bmiCat.textContent = 'Obese range';
+      bmiInline.classList.add('show');
+    }
+  }
+  heightInput.addEventListener('input', updateBMI);
+  weightInput.addEventListener('input', updateBMI);
+
+  /* ── Predict ── */
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.classList.add('loading');
+    submitBtn.innerHTML = '<div class="spinner"></div> Analysing…';
+
+    // Reset right panel
+    [resultHeroCard, adviceCard, probCard].forEach(el => el.style.display = 'none');
+
+    try {
+      const res  = await fetch('/predict', { method: 'POST', body: new FormData(form) });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Prediction failed.');
+
+      idlePanel.style.display = 'none';
+
+      /* ── Hero card ── */
+      resultHeroCard.style.background  = hexToRgba(data.color, 0.07);
+      resultHeroCard.style.borderColor = hexToRgba(data.color, 0.35);
+      resultEmoji.textContent = EMOJI[data.label] || '📊';
+      resultLabel.textContent = data.label;
+      resultLabel.style.color = data.color;
+      resultConf.textContent  = `${data.confidence}% confidence`;
+
+      /* Gauge */
+      gaugeArc.style.stroke = data.color;
+      gaugeArc.style.strokeDashoffset = 176 - (data.confidence / 100) * 176;
+      gaugeText.textContent = data.confidence + '%';
+
+      /* Top-3 class badges */
+      classBadges.innerHTML = '';
+      data.class_probs.slice(0, 3).forEach(cp => {
+        const c = CLASS_COLORS[cp.label] || '#6366f1';
+        const b = document.createElement('span');
+        b.className = 'class-badge';
+        b.style.background  = hexToRgba(c, 0.1);
+        b.style.borderColor = hexToRgba(c, 0.35);
+        b.style.color = c;
+        b.textContent = `${cp.label} ${cp.prob}%`;
+        classBadges.appendChild(b);
+      });
+
+      show(resultHeroCard);
+
+      /* ── Advice ── */
+      adviceCard.style.borderColor = hexToRgba(data.color, 0.3);
+      adviceCard.style.background  = hexToRgba(data.color, 0.05);
+      adviceIcon.style.color       = data.color;
+      adviceText.textContent       = data.advice;
+      show(adviceCard);
+
+      /* ── Prob bars ── */
+      probList.innerHTML = '';
+      const maxProb = data.class_probs[0].prob;
+      data.class_probs.forEach(cp => {
+        const c = CLASS_COLORS[cp.label] || '#6366f1';
+        const row = document.createElement('div');
+        row.className = 'prob-row';
+        row.innerHTML = `
+          <div class="prob-dot" style="background:${c}"></div>
+          <span class="prob-name">${cp.label}</span>
+          <div class="prob-bar-wrap">
+            <div class="prob-bar" style="width:0%;background:${c};opacity:${cp.prob===maxProb?1:.4}"></div>
+          </div>
+          <span class="prob-pct">${cp.prob}%</span>`;
+        probList.appendChild(row);
+        requestAnimationFrame(() => row.querySelector('.prob-bar').style.width = cp.prob + '%');
+      });
+      show(probCard);
+
+    } catch (err) {
+      idlePanel.style.display = 'flex';
+      probList.innerHTML = `<div class="error-box"><span class="material-icons-round">error_outline</span>${err.message}</div>`;
+      show(probCard);
+    } finally {
+      submitBtn.classList.remove('loading');
+      submitBtn.innerHTML = '<span class="material-icons-round">analytics</span> Analyse My Risk';
+    }
+  });
+
+  function show(el) {
+    el.style.display = '';
+    el.classList.add('result-visible');
+  }
+  function hexToRgba(hex, a) {
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+</script>
+</body>
+</html>
